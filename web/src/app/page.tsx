@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchThreads, Thread } from "@/api/client";
+import { MessagePane } from "@/components/MessagePane";
 
 export default function Home() {
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -34,11 +35,12 @@ export default function Home() {
       </aside>
 
       <section style={{ flex: 1, padding: 16 }}>
-        {selectedThreadId ? (
-          <div>Thread: {selectedThreadId}</div>
-        ) : (
-          <div>Select a thread</div>
-        )}
+       {selectedThreadId ? (
+          <MessagePane threadId={selectedThreadId} />) 
+          : (
+              <div>Select a thread</div>
+            )}
+
       </section>
     </main>
   );
