@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { fetchMessages, Message } from "@/api/client";
 
+import { Virtuoso } from "react-virtuoso";
+
+
 export function MessagePane({ threadId }: { threadId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -22,15 +25,18 @@ export function MessagePane({ threadId }: { threadId: string }) {
   }, [threadId]);
 
   return (
-    <div>
-      {messages.map((m) => (
-        <div key={m.id} style={{ marginBottom: 8 }}>
+  <div style={{ height: "100%", minHeight: 400 }}>
+    <Virtuoso
+      data={messages}
+      itemContent={(_, m) => (
+        <div style={{ padding: "8px 0" }}>
           <div style={{ fontSize: 12, color: "#666" }}>
             {new Date(m.createdAt).toLocaleTimeString()}
           </div>
           <div>{m.text}</div>
         </div>
-      ))}
-    </div>
-  );
+      )}
+    />
+  </div>
+);
 }
