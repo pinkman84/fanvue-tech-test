@@ -34,14 +34,16 @@ export default function Home() {
         ))}
       </aside>
 
-      <section style={{ flex: 1, padding: 16 }}>
-       {selectedThreadId ? (
-          <MessagePane threadId={selectedThreadId} />) 
-          : (
-              <div>Select a thread</div>
-            )}
+     <section style={{ flex: 1, padding: 16, display: "flex", flexDirection: "column", minHeight: 0 }}>
+      {selectedThreadId ? (
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <MessagePane threadId={selectedThreadId} />
+      </div>
+      ) : (
+      <div>Select a thread</div>
+  )}
+</section>
 
-      </section>
     </main>
   );
 }
