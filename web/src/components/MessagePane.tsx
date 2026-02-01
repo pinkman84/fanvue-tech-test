@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { fetchMessages, postMessage, Message } from "@/api/client";
 
-export function MessagePane({ threadId }: { threadId: string }) {
+export function MessagePane({ threadId, threadName }: { threadId: string, threadName: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loadingOlder, setLoadingOlder] = useState(false);
@@ -10,20 +10,6 @@ export function MessagePane({ threadId }: { threadId: string }) {
   const [sendingMessage, setSendingMessage] = useState<boolean>(false)
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
-
-  useEffect(() => {
-    setMessages([]);
-    setCursor(null);
-
-    fetchMessages({
-      threadId,
-      direction: "backward",
-      limit: 50,
-    }).then((page) => {
-      setMessages(page.items);
-      setCursor(page.nextCursor);
-    });
-  }, [threadId]);
 
   useEffect(() => {
     let alive = true;
@@ -80,6 +66,7 @@ const sendNewMessage = async () => {
 
   return (
    <div style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column"}}>
+    <h2>{threadName}</h2>
      <div style={{ flex: 1, minHeight: 0 }}>
       <Virtuoso
         ref={virtuosoRef}
@@ -87,12 +74,12 @@ const sendNewMessage = async () => {
         atTopStateChange={(atTop) => {
     if (atTop) loadOlder();
   }}
-        itemContent={(_, m) => (
+        itemContent={(_, message) => (
           <div style={{ padding: "8px 0" }}>
             <div style={{ fontSize: 12, color: "#666" }}>
-              {new Date(m.createdAt).toLocaleTimeString()}
+              {new Date(message.createdAt).toLocaleTimeString()}
             </div>
-            <div>{m.text}</div>
+            <div>{message.text}</div>
           </div>
         )}
       />
@@ -110,6 +97,9 @@ const sendNewMessage = async () => {
             placeholder="Reply..."
             style={{ flex: 1, padding: 8}}
             />
+            <button type="submit" disabled={sendingMessage || !draft.trim()}>
+                {sendingMessage ? "Sending…" : "Send"}
+            </button>
         </form>
     </div>
    </div>

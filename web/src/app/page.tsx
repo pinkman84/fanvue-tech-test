@@ -1,70 +1,80 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchThreads, Thread } from "@/api/client";
+import { ThreadsPane } from "@/components/ThreadsPane";
 import { MessagePane } from "@/components/MessagePane";
 
 export default function Home() {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
-
-  const filteredThreads = useMemo(() => {
-  const q = query.trim().toLowerCase();
-    if (!q) return threads;
-
-    return threads.filter((t) => t.title.toLowerCase().includes(q));
-  }, [threads, query]);
+  const [selectedThreadName, setSelectedThreadName] = useState<string>("")
+  const [loadingThreads, setLoadingThreads] = useState(true);
+  const [threadsError, setThreadsError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchThreads().then((t) => {
-      setThreads(t);
-      if (t.length > 0) setSelectedThreadId(t[0].id);
-    });
+    let alive = true;
+
+    setLoadingThreads(true);
+    setThreadsError(null);
+
+    fetchThreads()
+      .then((items) => {
+        if (!alive) return;
+        setThreads(items);
+        setSelectedThreadId((prev) => prev ?? (items[0]?.id ?? null));
+      })
+      .catch((e) => {
+        if (!alive) return;
+        setThreadsError(e instanceof Error ? e.message : "Failed to load threads");
+      })
+      .finally(() => {
+        if (!alive) return;
+        setLoadingThreads(false);
+      });
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
   return (
     <main style={{ display: "flex", height: "100vh" }}>
-      <aside style={{ width: 300, borderRight: "1px solid #ddd" }}>
-        <div style={{ padding: 12, borderBottom: "1px solid #ddd" }}>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search threads…"
-          style={{ width: "100%", padding: 8 }}
-        />
-        </div>
+      <aside style={{ width: 320, borderRight: "1px solid #ddd", padding: 12 }}>
+        <h1 style={{ margin: "0 0 12px 0" }}>Threads</h1>
 
-        {filteredThreads.length === 0 ? (
-          <div style={{ padding: 12, color: "#666" }}>No threads match your search.</div>
-        ) : (
-          filteredThreads.map((t) => (
-          <div
-            key={t.id}
-            onClick={() => setSelectedThreadId(t.id)}
-            style={{
-              padding: 12,
-              cursor: "pointer",
-              background:
-                t.id === selectedThreadId ? "#f5f5f5" : "transparent",
+        {loadingThreads && <div>Loading…</div>}
+        {threadsError && <div style={{ color: "crimson" }}>{threadsError}</div>}
+
+        {!loadingThreads && !threadsError && (
+          <ThreadsPane
+            threads={threads}
+            selectedThreadId={selectedThreadId}
+            onSelect={(thread) =>{
+              setSelectedThreadId(thread.id);
+              setSelectedThreadName(thread.title)
             }}
-          >
-            {t.title}
-          </div>
-        ))
+          />
         )}
       </aside>
 
-     <section style={{ flex: 1, padding: 16, display: "flex", flexDirection: "column", minHeight: 0 }}>
-      {selectedThreadId ? (
-      <div style={{ flex: 1, minHeight: 0 }}>
-        <MessagePane threadId={selectedThreadId} />
-      </div>
-      ) : (
-      <div>Select a thread</div>
-  )}
-</section>
-
+      <section
+        style={{
+          flex: 1,
+          padding: 16,
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
+        }}
+      >
+        {selectedThreadId ? (
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <MessagePane threadId={selectedThreadId} threadName={selectedThreadName} />
+          </div>
+        ) : (
+          <div>Select a thread</div>
+        )}
+      </section>
     </main>
   );
 }
