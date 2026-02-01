@@ -195,12 +195,24 @@ export function paginateMessages(opts: {
 
 /** Create a new message and update thread lastMessageAt. */
 export function createMessage(opts: { threadId: string; text: string }): Message {
-  // TODO: validate thread exists
-  // TODO: push into messages array
-  // TODO: keep array sorted (or append if you always create "now")
-  // TODO: update lastMessageAt
-  // TODO: return created message
-  throw new Error("Not implemented");
+  const thread = getThread(opts.threadId)
+  if (!thread) throw new Error("Thread not found");
+
+  const msg: Message = {
+    id: makeId("msg"),
+    threadId: opts.threadId,
+    text: opts.text,
+    createdAt: Date.now()
+  }
+
+  const messageArray = getMessages(opts.threadId);
+  messageArray.push(msg);
+  store.messagesByThreadId.set(thread.id, messageArray);
+
+  thread.lastMessageAt = msg.createdAt;
+  store.threadsById.set(thread.id, thread)
+
+  return msg;
 }
 
 /** Update message text (return updated or undefined if not found). */

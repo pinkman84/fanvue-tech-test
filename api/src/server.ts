@@ -1,7 +1,7 @@
 // api/src/server.ts
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
-import { seedStore, listThreads, paginateMessages, getThread } from "./store";
+import { seedStore, listThreads, paginateMessages, getThread, createMessage } from "./store";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
 
@@ -58,6 +58,24 @@ app.get("/threads/:id/messages", (req, res) => {
   const page = paginateMessages({ threadId, limit, cursor, direction });
 
   res.json(page);
+});
+
+app.post("/threads/:id/messages", (req, res) => {
+    const threadId = req.params.id;
+    const text = typeof req.body?.text === "string" ? req.body.text : "";
+
+    if (!text.trim()) {
+        res.status(400).json({ error: "text is required"});
+        return;
+    }
+
+    try {
+        const msg = createMessage({threadId, text});
+        res.status(201).json(msg);
+    } catch (e) {
+        res.status(404).json({ error: "Thread not found" })
+    }
+
 });
 
 

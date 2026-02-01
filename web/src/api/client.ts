@@ -38,3 +38,17 @@ export async function fetchMessages(opts: {
   if (!res.ok) throw new Error("Failed to fetch messages");
   return res.json();
 }
+
+export async function postMessage(opts: {
+    threadId: string;
+    text: string;
+}): Promise<Message> {
+    const res = await fetch(`${API_BASE}/threads/${opts.threadId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: opts.text })
+    });
+
+    if (!res.ok) throw new Error("Failed to post message");
+    return res.json();
+}
